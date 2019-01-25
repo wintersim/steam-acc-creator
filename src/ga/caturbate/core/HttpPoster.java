@@ -14,6 +14,10 @@ public class HttpPoster {
     }
 
     public void postRegistration(String email, String country, String captcha) {
-        
+
+    }
+
+    public void postPassword(String username, String passworwd) {
+
     }
 }
