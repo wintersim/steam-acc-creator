@@ -26,24 +26,25 @@ public class SteamAccountCreator {
         System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
     }
 
-    public void downloadSteamLoginPage() {
+
+    //TODO: only continue if captcha matches and other errorchecks
+    public void start() {
         try (final WebClient webClient = new WebClient(BrowserVersion.FIREFOX_52)) {
             webClient.getOptions().setThrowExceptionOnScriptError(false);
-            webClient.getOptions().setDownloadImages(true);
+            webClient.getOptions().setDownloadImages(false);
             webClient.setAjaxController(new NicelyResynchronizingAjaxController());
             webClient.getCookieManager().setCookiesEnabled(true);
             webClient.getOptions().setRedirectEnabled(true);
             webClient.getCache().setMaxSize(0);
-            webClient.getOptions().setProxyConfig(new ProxyConfig("127.0.0.1", 8080));
-            webClient.getOptions().setUseInsecureSSL(true);
+            //webClient.getOptions().setProxyConfig(new ProxyConfig("127.0.0.1", 8080));
+            //webClient.getOptions().setUseInsecureSSL(true);
 
             HtmlPage page = webClient.getPage(Config.STEAM_LOGIN_URL);
-            wrapper = new SteamConnectionWrapper(webClient, this);
-
-            System.out.println(webClient.getOptions().getSSLClientCertificateStore());
+            wrapper = new SteamConnectionWrapper(webClient);
 
             sendRegistrationForm(page, webClient);
 
+            deactivateSteamGuard(webClient);
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -55,26 +56,24 @@ public class SteamAccountCreator {
 
     private void sendRegistrationForm(HtmlPage page, WebClient webClient) throws IOException {
 
-        /* Fill form*/
+        /* Fill out form*/
 
         HtmlForm form = page.getFormByName("create_account");
 
-        form.getInputByName("email").setValueAttribute("cowsayb00st_34@caturbate.ga");
-        form.getInputByName("reenter_email").setValueAttribute("cowsayb00st_34@caturbate.ga");
+        form.getInputByName("email").setValueAttribute("meine-mutter@trash-mail.com");
+        form.getInputByName("reenter_email").setValueAttribute("meine-mutter@trash-mail.com");
         HtmlSelect country = form.getSelectByName("country");
         country.setSelectedAttribute("AT", true);
-        /*form.getInputByName("lt").setValueAttribute("0");
-        form.getInputByName("lt").setAttribute("hidden","true" );*/
 
         HtmlCheckBoxInput checkBoxInput = form.getInputByName("i_agree_check");
         checkBoxInput.setChecked(true);
 
         //captcha
         HtmlImage img = (HtmlImage) page.getElementById("captchaImg");
-        System.out.println(img.getAttribute("src"));
-        System.out.println("id");
+        String captchaSrc = img.getAttribute("src");
+        System.out.println(captchaSrc);
         Scanner s = new Scanner(System.in);
-        String id = s.nextLine();
+        String id = captchaSrc.split("=")[1];
         System.out.println("captcha");
         String cap = s.nextLine();
 
@@ -88,13 +87,60 @@ public class SteamAccountCreator {
 
         btn.click();
 
-        page.executeJavaScript("StartCreationSession();"); //evtl nur ausführen, wenn captcha matcht
-        webClient.waitForBackgroundJavaScript(60000);
 
+        //Try 5 times if 'captcha matches' packet arrived
+        for(int i = 0; i < 5; i++) {
+            if (wrapper.getCaptchaState()) {
+                break;
+            }
+
+            synchronized (page) {
+                try {
+                    page.wait(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if(i == 4) {
+                System.out.println("Captcha does not match. Stopping...");
+                webClient.close();
+                System.exit(1);
+            }
+        }
+
+        //Age check dialog
+        page.executeJavaScript("StartCreationSession();"); //evtl nur ausführen, wenn captcha matcht
+
+        //Try 5 times if 'email verified' packet arrived
+        //TODO Enum for packet states(matching, notmatching,waiting)
+        for(int i = 0; i < 50; i++) {
+            if (wrapper.getEmailState()) {
+                break;
+            }
+
+            synchronized (page) {
+                try {
+                    page.wait(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if(i == 4) {
+                System.out.println("Email cannot be verified. Try another one. Exiting...");
+                webClient.close();
+                System.exit(1);
+            }
+        }
+
+        //Save redirected page
         page = (HtmlPage) page.getEnclosingWindow().getEnclosedPage();
 
         sendUsernameAndPassword(webClient, page);
 
+
+        //TODO read email from local server or from webmail
         // System.out.println("Enter email verification url");
         // openEmailVerificationWindow(webClient, s.nextLine());
     }
@@ -107,12 +153,15 @@ public class SteamAccountCreator {
         }
     }
 
-    public void sendUsernameAndPassword(WebClient client, HtmlPage page) { //callback from connection wrapper
+    public void sendUsernameAndPassword(WebClient client, HtmlPage page) {
         for (Cookie cookie : client.getCookieManager().getCookies()) {
             System.out.println(cookie);
         }
+
+        //Fill out form
+
         HtmlForm form = page.getFormByName("create_account");
-        form.getInputByName("accountname").setValueAttribute("cowsayb00st__34");
+        form.getInputByName("accountname").setValueAttribute("cowsayb00st__37");
 
         form.getInputByName("password").setValueAttribute("aX4LlUknAg88");
 
@@ -128,7 +177,7 @@ public class SteamAccountCreator {
         //Extract sessionID from raw html
         Pattern pattern = Pattern.compile("'(\\d+)'");
         Matcher matcher = pattern.matcher(page.asXml());
-        String sessID = "123";
+        String sessID = "0";
         if (matcher.find()) {
             sessID = matcher.group(1);
         }
@@ -145,7 +194,20 @@ public class SteamAccountCreator {
         page = (HtmlPage) page.getEnclosingWindow().getEnclosedPage();
     }
 
-    private void deactivateSteamGuard(WebClient client, HtmlPage page) {
 
+    //TODO WIP
+    private void deactivateSteamGuard(WebClient client) throws IOException {
+        HtmlPage page = client.getPage(Config.STEAM_NO_GUARD_URL);
+
+        HtmlForm form = (HtmlForm) page.getElementById("none_authenticator_form");
+        form.getInputByName("action").setValueAttribute("actuallynone");
+        form.removeChild(page.getElementById("none_authenticator_check"));
+
+        HtmlButton btn = (HtmlButton) page.createElement("button");
+        btn.setAttribute("type", "submit");
+        form.appendChild(btn);
+
+        HtmlPage p2 = btn.click();
+        System.out.println(p2.asXml());
     }
 }

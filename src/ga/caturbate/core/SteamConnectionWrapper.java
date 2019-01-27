@@ -13,14 +13,11 @@ import java.util.List;
 
 public class SteamConnectionWrapper extends WebConnectionWrapper {
     private List<String> responses;
-    private SteamAccountCreator creator;
     private WebClient client;
 
-    public SteamConnectionWrapper(WebClient webClient, SteamAccountCreator creator) throws IllegalArgumentException {
+    public SteamConnectionWrapper(WebClient webClient) throws IllegalArgumentException {
         super(webClient);
         responses = new LinkedList<>();
-        this.creator = creator;
-        this.client = webClient;
     }
 
     @Override
@@ -31,18 +28,38 @@ public class SteamConnectionWrapper extends WebConnectionWrapper {
             String content = response.getContentAsString();
 
             System.out.println("Request: " + request.getRequestBody());
-            System.out.println("Response: " + content);
+            if(!response.getContentType().contains("text/html")) {
+                System.out.println("Response: " + content);
+            }
+            else {
+                System.out.println("Response: too long");
+            }
 
             responses.add(content);
 
-          //  if(content.contains(Config.STEAM_ACCOUNT_FINISH_STRING)) { //If response is username/password page --> callback
-              //  creator.sendUsernameAndPassword(client, content, request.getUrl());
-          //  }
 
             WebResponseData data = new WebResponseData(content.getBytes(),
                     response.getStatusCode(), response.getStatusMessage(), response.getResponseHeaders());
             response = new WebResponse(data, request, response.getLoadTime());
         }
         return response;
+    }
+
+    public boolean getCaptchaState() {
+        for (String respons : responses) {
+            if(respons.contains(Config.STEAM_CAPTCHA_MATCHES_JSON)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean getEmailState() {
+        for (String respons : responses) {
+            if(respons.equalsIgnoreCase(Config.STEAM_EMAIL_VERIFIED)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
