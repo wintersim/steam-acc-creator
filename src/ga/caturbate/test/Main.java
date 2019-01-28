@@ -6,9 +6,9 @@ import ga.caturbate.core.WebMailReader;
 public class Main {
     public static void main(String[] args) {
         SteamAccountCreator accountCreator = new SteamAccountCreator();
-        //accountCreator.start();
+        accountCreator.start();
 
-        WebMailReader mailReader = new WebMailReader();
-        mailReader.getSteamVerifyUrl("cowsayb00st_29", "123456");
+        //WebMailReader mailReader = new WebMailReader();
+        //mailReader.getSteamVerifyUrl("cowsayb00st_29", "123456");
     }
 }

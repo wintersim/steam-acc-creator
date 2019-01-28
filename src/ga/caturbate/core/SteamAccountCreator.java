@@ -60,8 +60,8 @@ public class SteamAccountCreator {
 
         HtmlForm form = page.getFormByName("create_account");
 
-        form.getInputByName("email").setValueAttribute("meine-mutter@trash-mail.com");
-        form.getInputByName("reenter_email").setValueAttribute("meine-mutter@trash-mail.com");
+        form.getInputByName("email").setValueAttribute("heilhuller@yandex.com");
+        form.getInputByName("reenter_email").setValueAttribute("heilhuller@yandex.com");
         HtmlSelect country = form.getSelectByName("country");
         country.setSelectedAttribute("AT", true);
 
@@ -87,23 +87,23 @@ public class SteamAccountCreator {
 
         btn.click();
 
+        CaptchaEmailState state;
 
         //Try 5 times if 'captcha matches' packet arrived
         for(int i = 0; i < 5; i++) {
-            if (wrapper.getCaptchaState()) {
+            state = wrapper.getCaptchaState();
+            if (state == CaptchaEmailState.CAPTCHA_AND_MAIL) {
                 break;
             }
 
-            synchronized (page) {
-                try {
-                    page.wait(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
 
             if(i == 4) {
-                System.out.println("Captcha does not match. Stopping...");
+                System.out.println("Error[" + state + "] Stopping...");
                 webClient.close();
                 System.exit(1);
             }
@@ -112,33 +112,32 @@ public class SteamAccountCreator {
         //Age check dialog
         page.executeJavaScript("StartCreationSession();"); //evtl nur ausführen, wenn captcha matcht
 
-        //Try 5 times if 'email verified' packet arrived
-        //TODO Enum for packet states(matching, notmatching,waiting)
-        for(int i = 0; i < 50; i++) {
+        //Wait for 'email verified' packet arrival
+        // TODO Enum for packet states(matching, notmatching,waiting)
+        for(int i = 0; i < 50000; i++) {
             if (wrapper.getEmailState()) {
                 break;
             }
 
-            synchronized (page) {
-                try {
-                    page.wait(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
 
-            if(i == 4) {
+            if(i == 49999) {
                 System.out.println("Email cannot be verified. Try another one. Exiting...");
                 webClient.close();
                 System.exit(1);
             }
         }
 
+        webClient.waitForBackgroundJavaScript(60000);
+
         //Save redirected page
         page = (HtmlPage) page.getEnclosingWindow().getEnclosedPage();
 
         sendUsernameAndPassword(webClient, page);
-
 
         //TODO read email from local server or from webmail
         // System.out.println("Enter email verification url");
@@ -161,11 +160,12 @@ public class SteamAccountCreator {
         //Fill out form
 
         HtmlForm form = page.getFormByName("create_account");
-        form.getInputByName("accountname").setValueAttribute("cowsayb00st__37");
+        System.out.println(form.asXml());
+        form.getInputByName("accountname").setValueAttribute("laageistgros1");
 
-        form.getInputByName("password").setValueAttribute("aX4LlUknAg88");
+        form.getInputByName("password").setValueAttribute("dsu4hjdsfjj");
 
-        form.getInputByName("reenter_password").setValueAttribute("aX4LlUknAg88");
+        form.getInputByName("reenter_password").setValueAttribute("dsu4hjdsfjj");
 
         form.getInputByName("lt").setValueAttribute("0");
 

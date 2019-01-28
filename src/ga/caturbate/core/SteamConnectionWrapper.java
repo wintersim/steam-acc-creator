@@ -8,16 +8,24 @@ import com.gargoylesoftware.htmlunit.util.WebConnectionWrapper;
 import org.apache.http.HttpHeaders;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class SteamConnectionWrapper extends WebConnectionWrapper {
     private List<String> responses;
     private WebClient client;
+    private Map<String, CaptchaEmailState> captchaStates;
 
     public SteamConnectionWrapper(WebClient webClient) throws IllegalArgumentException {
         super(webClient);
         responses = new LinkedList<>();
+        captchaStates = new HashMap<>();
+        captchaStates.put(Config.STEAM_CAPTCHA_EMAIL_JSON, CaptchaEmailState.CAPTCHA_AND_MAIL);
+        captchaStates.put(Config.STEAM_CAPTCHA_JSON, CaptchaEmailState.CAPTCHA);
+        captchaStates.put(Config.STEAM_EMAIL_JSON, CaptchaEmailState.MAIL);
+        captchaStates.put(Config.STEAM_NONE_JSON, CaptchaEmailState.NONE);
     }
 
     @Override
@@ -45,13 +53,15 @@ public class SteamConnectionWrapper extends WebConnectionWrapper {
         return response;
     }
 
-    public boolean getCaptchaState() {
+    public CaptchaEmailState getCaptchaState() {
         for (String respons : responses) {
-            if(respons.contains(Config.STEAM_CAPTCHA_MATCHES_JSON)) {
-                return true;
+            for (Map.Entry<String, CaptchaEmailState> entry : captchaStates.entrySet()) {
+                if(respons.contains(entry.getKey())) {
+                    return entry.getValue();
+                }
             }
         }
-        return false;
+        return null;
     }
 
     public boolean getEmailState() {
