@@ -3,7 +3,6 @@ package ga.caturbate.core;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
-import com.gargoylesoftware.htmlunit.ProxyConfig;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.*;
 import com.gargoylesoftware.htmlunit.util.Cookie;
@@ -42,9 +41,9 @@ public class SteamAccountCreator {
             HtmlPage page = webClient.getPage(Config.STEAM_LOGIN_URL);
             wrapper = new SteamConnectionWrapper(webClient);
 
-            sendRegistrationForm(page, webClient);
+            sendRegistrationForm(page, webClient, new SteamAccount("wh4tAn3picG4mer420", "deadmigner@yandex.com", "asjkdhf74kh4"));
 
-            deactivateSteamGuard(webClient);
+            //deactivateSteamGuard(webClient);
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -54,16 +53,16 @@ public class SteamAccountCreator {
     }
 
 
-    private void sendRegistrationForm(HtmlPage page, WebClient webClient) throws IOException {
+    private void sendRegistrationForm(HtmlPage page, WebClient webClient, SteamAccount account) throws IOException {
 
         /* Fill out form*/
 
         HtmlForm form = page.getFormByName("create_account");
 
-        form.getInputByName("email").setValueAttribute("heilhuller@yandex.com");
-        form.getInputByName("reenter_email").setValueAttribute("heilhuller@yandex.com");
+        form.getInputByName("email").setValueAttribute(account.getEmail());
+        form.getInputByName("reenter_email").setValueAttribute(account.getEmail());
         HtmlSelect country = form.getSelectByName("country");
-        country.setSelectedAttribute("AT", true);
+        country.setSelectedAttribute(account.getCountryCode(), true);
 
         HtmlCheckBoxInput checkBoxInput = form.getInputByName("i_agree_check");
         checkBoxInput.setChecked(true);
@@ -137,7 +136,7 @@ public class SteamAccountCreator {
         //Save redirected page
         page = (HtmlPage) page.getEnclosingWindow().getEnclosedPage();
 
-        sendUsernameAndPassword(webClient, page);
+        sendUsernameAndPassword(webClient, page, account);
 
         //TODO read email from local server or from webmail
         // System.out.println("Enter email verification url");
@@ -152,7 +151,7 @@ public class SteamAccountCreator {
         }
     }
 
-    public void sendUsernameAndPassword(WebClient client, HtmlPage page) {
+    public void sendUsernameAndPassword(WebClient client, HtmlPage page, SteamAccount account) {
         for (Cookie cookie : client.getCookieManager().getCookies()) {
             System.out.println(cookie);
         }
@@ -160,12 +159,11 @@ public class SteamAccountCreator {
         //Fill out form
 
         HtmlForm form = page.getFormByName("create_account");
-        System.out.println(form.asXml());
-        form.getInputByName("accountname").setValueAttribute("laageistgros1");
+        form.getInputByName("accountname").setValueAttribute(account.getLogin());
 
-        form.getInputByName("password").setValueAttribute("dsu4hjdsfjj");
+        form.getInputByName("password").setValueAttribute(account.getPassword());
 
-        form.getInputByName("reenter_password").setValueAttribute("dsu4hjdsfjj");
+        form.getInputByName("reenter_password").setValueAttribute(account.getPassword());
 
         form.getInputByName("lt").setValueAttribute("0");
 
