@@ -8,7 +8,7 @@ public class Main {
         SteamAccountCreator accountCreator = new SteamAccountCreator();
         accountCreator.start();
 
-        //WebMailReader mailReader = new WebMailReader();
-        //mailReader.getSteamVerifyUrl("cowsayb00st_29", "123456");
+        WebMailReader mailReader = new WebMailReader();
+       // mailReader.getSteamVerifyUrl("cowsayb00st_29", "123456");
     }
 }

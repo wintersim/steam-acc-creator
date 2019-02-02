@@ -41,7 +41,9 @@ public class SteamAccountCreator {
             HtmlPage page = webClient.getPage(Config.STEAM_LOGIN_URL);
             wrapper = new SteamConnectionWrapper(webClient);
 
-            sendRegistrationForm(page, webClient, new SteamAccount("wh4tAn3picG4mer420", "deadmigner@yandex.com", "asjkdhf74kh4"));
+            sendRegistrationForm(page, webClient, new SteamAccount("yea442g3y3", "wh4tafag@yandex.com", "adsfjzg63kj"));
+            //Clear cookies when creating new accounts in loop
+
 
             //deactivateSteamGuard(webClient);
 

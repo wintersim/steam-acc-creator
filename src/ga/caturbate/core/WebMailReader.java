@@ -5,7 +5,6 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.*;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.MalformedURLException;
 
 public class WebMailReader {
@@ -34,6 +33,20 @@ public class WebMailReader {
 
             HtmlTableRow email = null;
 
+            for(Object object : page.getByXPath("\"//div[@class='subject']\"")) {
+                if(object instanceof HtmlTableDataCell) {
+                    HtmlTableDataCell dataCell = (HtmlTableDataCell) object;
+                    HtmlAnchor link = (HtmlAnchor) dataCell.getLastChild();
+                    if(link.getAttribute("title").contains("Steam Account Email Verification")) {
+                        //link.click();
+                       // page = link.click();
+                        System.out.println(link.getHrefAttribute());
+                        break;
+                    }
+                }
+            }
+
+          //  System.out.println(page.asXml());
 
            // System.out.println(page.asText());
 
