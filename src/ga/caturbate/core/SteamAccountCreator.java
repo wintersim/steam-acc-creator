@@ -6,6 +6,8 @@ import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.*;
 import com.gargoylesoftware.htmlunit.util.Cookie;
+import ga.caturbate.io.CookieFileReader;
+import ga.caturbate.io.CookieFileWriter;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -41,9 +43,14 @@ public class SteamAccountCreator {
             HtmlPage page = webClient.getPage(Config.STEAM_LOGIN_URL);
             wrapper = new SteamConnectionWrapper(webClient);
 
-            sendRegistrationForm(page, webClient, new SteamAccount("wh4tAn3picG4mer420", "deadmigner@yandex.com", "asjkdhf74kh4"));
+            sendRegistrationForm(page, webClient, new SteamAccount("n4ggerF4gg0t435ba", "heilhiddler@yandex.com", "as3kf74dhkh4"));
 
-            //deactivateSteamGuard(webClient);
+           /* CookieFileWriter cfw = new CookieFileWriter();
+            CookieFileReader cfr = new CookieFileReader();
+            webClient.setCookieManager(cfr.readCookies());
+            //cfw.writeCookies(webClient.getCookieManager());*/
+
+            deactivateSteamGuard(webClient);
 
         } catch (MalformedURLException e) {
             e.printStackTrace();

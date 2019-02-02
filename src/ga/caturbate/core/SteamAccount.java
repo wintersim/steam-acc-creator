@@ -5,12 +5,14 @@ public class SteamAccount implements Comparable<SteamAccount>{
     private String email;
     private String password;
     private String countryCode;
+    private boolean isCreated;
 
     public SteamAccount(String login, String email, String password) {
         this.login = login;
         this.email = email;
         this.password = password;
         this.countryCode = Config.DEFAULT_COUNTRY_CODE;
+        this.isCreated = false;
     }
 
     public SteamAccount(String login, String email, String password, String countryCode) {
@@ -18,6 +20,7 @@ public class SteamAccount implements Comparable<SteamAccount>{
         this.email = email;
         this.password = password;
         this.countryCode = countryCode;
+        this.isCreated = false;
     }
 
     public SteamAccount(String login, String password) {
@@ -25,6 +28,7 @@ public class SteamAccount implements Comparable<SteamAccount>{
         this.password = password;
         this.email = "";
         this.countryCode = Config.DEFAULT_COUNTRY_CODE;
+        this.isCreated = true;
     }
 
     public String getCountryCode() {
@@ -59,6 +63,14 @@ public class SteamAccount implements Comparable<SteamAccount>{
         this.password = password;
     }
 
+    public boolean isCreated() {
+        return isCreated;
+    }
+
+    public void setCreated(boolean created) {
+        isCreated = created;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -66,6 +78,7 @@ public class SteamAccount implements Comparable<SteamAccount>{
 
         SteamAccount that = (SteamAccount) o;
 
+        if (isCreated != that.isCreated) return false;
         if (getLogin() != null ? !getLogin().equals(that.getLogin()) : that.getLogin() != null) return false;
         if (getEmail() != null ? !getEmail().equals(that.getEmail()) : that.getEmail() != null) return false;
         if (getPassword() != null ? !getPassword().equals(that.getPassword()) : that.getPassword() != null)
@@ -79,6 +92,7 @@ public class SteamAccount implements Comparable<SteamAccount>{
         result = 31 * result + (getEmail() != null ? getEmail().hashCode() : 0);
         result = 31 * result + (getPassword() != null ? getPassword().hashCode() : 0);
         result = 31 * result + (getCountryCode() != null ? getCountryCode().hashCode() : 0);
+        result = 31 * result + (isCreated ? 1 : 0);
         return result;
     }
 
@@ -97,6 +111,10 @@ public class SteamAccount implements Comparable<SteamAccount>{
 
                     if (ret == 0) {
                         ret = password.compareTo(o.getPassword());
+
+                        if(ret == 0) {
+                            ret = Boolean.compare(o.isCreated, isCreated);
+                        }
                     }
                 }
             }
