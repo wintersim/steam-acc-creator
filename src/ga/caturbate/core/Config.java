@@ -17,6 +17,7 @@ public class Config {
     public static final String PASSWORD_REGEX = "[\\w]+";
 
     public static final String COOKIE_FILE = "cookies.dat";
+    public static final String COOKIE_TXT_FILE = "cookies.txt";
 
     public static final String MAIL_SERVER_BASE_URL = "http://192.168.0.208/webmail/";
 }

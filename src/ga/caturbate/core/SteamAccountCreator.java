@@ -4,8 +4,10 @@ package ga.caturbate.core;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
 import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.html.*;
 import com.gargoylesoftware.htmlunit.util.Cookie;
+import ga.caturbate.io.CookieFileReader;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -38,24 +40,37 @@ public class SteamAccountCreator {
             //webClient.getOptions().setProxyConfig(new ProxyConfig("127.0.0.1", 8080));
             //webClient.getOptions().setUseInsecureSSL(true);
 
-            HtmlPage page = webClient.getPage(Config.STEAM_LOGIN_URL);
             wrapper = new SteamConnectionWrapper(webClient);
 
-            sendRegistrationForm(page, webClient, new SteamAccount("yea442g3y3", "wh4tafag@yandex.com", "adsfjzg63kj"));
+           /* sendRegistrationForm(webClient, new SteamAccount("rakat4aga23242ss", "asdfassdf@cock.li", "45646fddgfbbb3"));
             //Clear cookies when creating new accounts in loop
 
+            CookieFileWriter w = new CookieFileWriter();
+            w.writeCookiesAsText(webClient.getCookieManager());
+            w.writeCookies(webClient.getCookieManager());
+*/
 
-            //deactivateSteamGuard(webClient);
+            CookieFileReader r = new CookieFileReader();
+            WebRequest request = new WebRequest(new URL(Config.STEAM_NO_GUARD_URL));
+            webClient.setCookieManager(r.readCookies());
+            String cook = "";
+            for(Cookie c : webClient.getCookieManager().getCookies()) {
+                System.out.println(c.getName() +"=" + c.getValue());
+                cook += c.getName() +"=" + c.getValue() + ";";
+            }
 
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+            request.setAdditionalHeader("Cookie", cook);
+
+            deactivateSteamGuard(webClient, request);
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
 
-    private void sendRegistrationForm(HtmlPage page, WebClient webClient, SteamAccount account) throws IOException {
+    private void sendRegistrationForm(WebClient webClient, SteamAccount account) throws IOException {
+        HtmlPage page = webClient.getPage(Config.STEAM_LOGIN_URL);
 
         /* Fill out form*/
 
@@ -114,7 +129,6 @@ public class SteamAccountCreator {
         page.executeJavaScript("StartCreationSession();"); //evtl nur ausführen, wenn captcha matcht
 
         //Wait for 'email verified' packet arrival
-        // TODO Enum for packet states(matching, notmatching,waiting)
         for(int i = 0; i < 50000; i++) {
             if (wrapper.getEmailState()) {
                 break;
@@ -189,25 +203,26 @@ public class SteamAccountCreator {
         sessionID.setValueAttribute(sessID);
         form.appendChild(sessionID);
 
-        System.out.println(page.executeJavaScript("ReallyCreateAccount();"));
-        client.waitForBackgroundJavaScript(60000);
+        page.executeJavaScript("ReallyCreateAccount();");
+        client.waitForBackgroundJavaScript(20000);
         page = (HtmlPage) page.getEnclosingWindow().getEnclosedPage();
     }
 
 
     //TODO WIP
-    private void deactivateSteamGuard(WebClient client) throws IOException {
-        HtmlPage page = client.getPage(Config.STEAM_NO_GUARD_URL);
+    //TODO login
+    private void deactivateSteamGuard(WebClient client, WebRequest request) throws IOException {
+        HtmlPage page = client.getPage(request);
 
         HtmlForm form = (HtmlForm) page.getElementById("none_authenticator_form");
         form.getInputByName("action").setValueAttribute("actuallynone");
-        form.removeChild(page.getElementById("none_authenticator_check"));
+        //form.removeChild(page.getElementById("none_authenticator_check"));
+        form.getInputByName("none_authenticator_check").remove();
 
         HtmlButton btn = (HtmlButton) page.createElement("button");
         btn.setAttribute("type", "submit");
         form.appendChild(btn);
 
-        HtmlPage p2 = btn.click();
-        System.out.println(p2.asXml());
+        btn.click();
     }
 }
