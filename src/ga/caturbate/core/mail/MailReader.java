@@ -1,4 +1,4 @@
-package ga.caturbate.core;
+package ga.caturbate.core.mail;
 
 import javax.mail.*;
 import javax.mail.internet.MimeMultipart;
@@ -15,14 +15,13 @@ public class MailReader {
 
     }
 
-    public void testMail() throws MessagingException, IOException {
+    public String getSteamVerifyUrl(String server,String mailUser, String mailPasswd) throws MessagingException, IOException {
         Session session = Session.getDefaultInstance(new Properties());
         Store store = session.getStore("imap");
-        store.connect("192.168.0.208", 143, "cowsayb00st_29", "123456");
+        store.connect(server, 143, mailUser, mailPasswd);
         Folder inbox = store.getFolder("INBOX");
         inbox.open(Folder.READ_ONLY);
 
-        // Fetch unseen messages from inbox folder
         Message[] messages = inbox.getMessages();
 
         // Sort messages from recent to oldest
@@ -68,8 +67,7 @@ public class MailReader {
         //remove brackets
         url = url.replace("<", "");
         url = url.replace(">", "");
-        System.out.println(url);
-
+        return url;
     }
 
 }

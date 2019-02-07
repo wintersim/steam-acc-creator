@@ -1,6 +1,6 @@
 package ga.caturbate.test;
 
-import ga.caturbate.core.MailReader;
+import ga.caturbate.core.mail.MailReader;
 import ga.caturbate.core.SteamAccountCreator;
 
 import javax.mail.MessagingException;
@@ -13,12 +13,6 @@ public class Main {
 
         MailReader mailReader = new MailReader();
         //mailReader.getSteamVerifyUrl("cowsayb00st_29", "123456");
-        try {
-            mailReader.testMail();
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 }
