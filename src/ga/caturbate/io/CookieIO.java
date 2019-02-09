@@ -6,7 +6,13 @@ import ga.caturbate.core.Config;
 
 import java.io.*;
 
-public class CookieFileWriter {
+public class CookieIO {
+
+    public CookieManager readCookies() throws IOException, ClassNotFoundException {
+        try(ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(Config.COOKIE_FILE)))) {
+            return (CookieManager) ois.readObject();
+        }
+    }
 
     public void writeCookies(CookieManager cookieManager) throws IOException {
         try(ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(Config.COOKIE_FILE)))) {

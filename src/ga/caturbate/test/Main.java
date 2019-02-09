@@ -1,10 +1,7 @@
 package ga.caturbate.test;
 
-import ga.caturbate.core.mail.MailReader;
 import ga.caturbate.core.SteamAccountCreator;
-
-import javax.mail.MessagingException;
-import java.io.IOException;
+import ga.caturbate.io.MailReader;
 
 public class Main {
     public static void main(String[] args) {

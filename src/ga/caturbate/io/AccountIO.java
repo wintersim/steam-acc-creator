@@ -17,9 +17,9 @@ import java.util.regex.Pattern;
  *
  * */
 
-public class AccountFileReader {
+public class AccountIO {
 
-    public AccountFileReader() {
+    public AccountIO() {
     }
 
     public Set<SteamAccount> readAccountFile(String filename) throws IOException {

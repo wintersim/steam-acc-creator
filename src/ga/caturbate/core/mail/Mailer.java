@@ -1,5 +1,7 @@
 package ga.caturbate.core.mail;
 
+import ga.caturbate.io.MailReader;
+
 import javax.mail.MessagingException;
 import java.io.IOException;
 
@@ -17,6 +19,14 @@ public class Mailer {
     }
 
     //Creates new mail user first
+
+    /* TODO
+     *
+     * send GET to php script
+     * script launsches sh script to all vmail users
+     * script echoes usernames of said vmailusers to HTML
+     * this program reads the HTML and reads the vmailusers
+     */
     public String getSteamVerificationUrl() throws IOException, MessagingException {
         String user = "";
         String pw = "";

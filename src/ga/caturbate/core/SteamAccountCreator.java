@@ -7,7 +7,7 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.html.*;
 import com.gargoylesoftware.htmlunit.util.Cookie;
-import ga.caturbate.io.CookieFileReader;
+import ga.caturbate.io.CookieIO;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -50,7 +50,7 @@ public class SteamAccountCreator {
             w.writeCookies(webClient.getCookieManager());
 */
 
-            CookieFileReader r = new CookieFileReader();
+            CookieIO r = new CookieIO();
             WebRequest request = new WebRequest(new URL(Config.STEAM_NO_GUARD_URL));
             webClient.setCookieManager(r.readCookies());
             String cook = "";

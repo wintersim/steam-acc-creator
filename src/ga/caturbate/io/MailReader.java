@@ -1,4 +1,4 @@
-package ga.caturbate.core.mail;
+package ga.caturbate.io;
 
 import javax.mail.*;
 import javax.mail.internet.MimeMultipart;
