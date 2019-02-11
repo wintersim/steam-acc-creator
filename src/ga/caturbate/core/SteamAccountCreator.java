@@ -6,12 +6,12 @@ import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.html.*;
-import com.gargoylesoftware.htmlunit.util.Cookie;
 import ga.caturbate.core.mail.Mailer;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -54,24 +54,16 @@ public class SteamAccountCreator {
 
             SteamAccount acc = fetchNewSteamAccount(webClient);
 
-            System.out.println(acc);
+            if(acc == null) {
+                System.out.println("Failed to fetch account from server");
+                return;
+            }
 
             sendRegistrationForm(webClient,acc);
 
             //Clear cookies when creating new accounts in loop
 
-           /* CookieIO r = new CookieIO();
-            WebRequest request = new WebRequest(new URL(Config.STEAM_NO_GUARD_URL));
-            webClient.setCookieManager(r.readCookies());
-            String cook = "";
-            for(Cookie c : webClient.getCookieManager().getCookies()) {
-                System.out.println(c.getName() +"=" + c.getValue());
-                cook += c.getName() +"=" + c.getValue() + ";";
-            }
-
-            request.setAdditionalHeader("Cookie", cook);*/
-
-            //deactivateSteamGuard(webClient, request);
+            deactivateSteamGuard(webClient,  new WebRequest(new URL(Config.STEAM_NO_GUARD_URL)));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -138,16 +130,16 @@ public class SteamAccountCreator {
         //Age check dialog
         page.executeJavaScript("StartCreationSession();"); //evtl nur ausführen, wenn captcha matcht
 
+        //Give Email a Chance to arrive
+        //Todo: wait in loop until arrived
         try {
-            Thread.sleep(20000); //Give email a chance to arrive
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         Mailer m = new Mailer("192.168.0.208");
-        System.out.println("Getting verification url...");
         String url = m.getSteamVerificationUrl(account.getEmail());
-        System.out.println(url);
         openEmailVerificationWindow(url);
 
         //Wait for 'email verified' packet arrival
@@ -179,8 +171,6 @@ public class SteamAccountCreator {
 
     private void openEmailVerificationWindow(String url) {
 
-        System.out.println("Opening " + url + "...");
-
         Thread one = new Thread() {
             public void run() {
                 try (final WebClient webClient = new WebClient(BrowserVersion.FIREFOX_52)) {
@@ -205,12 +195,7 @@ public class SteamAccountCreator {
     }
 
     public void sendUsernameAndPassword(WebClient client, HtmlPage page, SteamAccount account) {
-        for (Cookie cookie : client.getCookieManager().getCookies()) {
-            System.out.println(cookie);
-        }
-
         //Fill out form
-
         HtmlForm form = page.getFormByName("create_account");
         form.getInputByName("accountname").setValueAttribute(account.getLogin());
 
@@ -233,8 +218,6 @@ public class SteamAccountCreator {
             sessID = matcher.group(1);
         }
 
-        System.out.println(sessID);
-
         HtmlInput sessionID = (HtmlInput) page.createElement("input");
         sessionID.setAttribute("name", "creation_sessionid");
         sessionID.setValueAttribute(sessID);
@@ -251,8 +234,7 @@ public class SteamAccountCreator {
 
         HtmlForm form = (HtmlForm) page.getElementById("none_authenticator_form");
         form.getInputByName("action").setValueAttribute("actuallynone");
-        //form.removeChild(page.getElementById("none_authenticator_check"));
-        form.getInputByName("none_authenticator_check").remove();
+        form.getInputByName("none_authenticator_check").remove(); //Prevent going to confirmation page
 
         HtmlButton btn = (HtmlButton) page.createElement("button");
         btn.setAttribute("type", "submit");
@@ -269,7 +251,6 @@ public class SteamAccountCreator {
         HtmlPage page = client.getPage(Config.ACCOUNT_CREATE_SERVER);
 
         HtmlPreformattedText pre = (HtmlPreformattedText) page.getElementById("user");
-        System.out.println(pre.getTextContent());
         String[] parts = pre.getTextContent().split(":");
 
         if(parts.length != 3) {

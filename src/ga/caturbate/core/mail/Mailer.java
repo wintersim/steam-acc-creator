@@ -1,18 +1,18 @@
 package ga.caturbate.core.mail;
 
 import ga.caturbate.core.Config;
-import ga.caturbate.io.MailReader;
+import ga.caturbate.io.MailIO;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
 
 public class Mailer {
     private String server;
-    private MailReader reader;
+    private MailIO reader;
 
     public Mailer(String server) {
         this.server = server;
-        this.reader = new MailReader();
+        this.reader = new MailIO();
     }
 
     public String getSteamVerificationUrl(String user, String pw) throws IOException, MessagingException {

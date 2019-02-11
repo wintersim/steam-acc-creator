@@ -9,13 +9,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class MailReader {
+public class MailIO {
 
-    public MailReader() {
+    public MailIO() {
 
     }
 
-    public String getSteamVerifyUrl(String server,String mailUser, String mailPasswd) throws MessagingException, IOException {
+    public String getSteamVerifyUrl(String server, String mailUser, String mailPasswd) throws MessagingException, IOException {
         Session session = Session.getDefaultInstance(new Properties());
         Store store = session.getStore("imap");
         store.connect(server, 143, mailUser, mailPasswd);
@@ -42,7 +42,7 @@ public class MailReader {
                 MimeMultipart tmp = (MimeMultipart) message.getContent();
                 for (int i = 0; i < tmp.getCount(); i++) {
                     BodyPart ibp = tmp.getBodyPart(i);
-                    if(((String)ibp.getContent()).contains("Verify your email address to complete creating your Steam account.")) {
+                    if (((String) ibp.getContent()).contains("Verify your email address to complete creating your Steam account.")) {
                         if (ibp.isMimeType("text/plain")) {
                             msg = (String) ibp.getContent();
                         }
@@ -51,7 +51,7 @@ public class MailReader {
             }
         }
 
-        if(msg.equalsIgnoreCase("")) {
+        if (msg.equalsIgnoreCase("")) {
             System.out.println("noo");
         }
 
@@ -64,9 +64,6 @@ public class MailReader {
             url = matcher.group(1);
         }
 
-        //remove brackets
-        url = url.replace("<", "");
-        url = url.replace(">", "");
         return url;
     }
 

@@ -8,6 +8,6 @@ public class Main {
         SteamAccountCreator accountCreator = new SteamAccountCreator();
         accountCreator.start();
 
-        //MailReader mailReader = new MailReader();
+        //MailIO mailReader = new MailIO();
     }
 }
