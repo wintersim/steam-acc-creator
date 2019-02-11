@@ -34,7 +34,7 @@ public class MailReader {
         });
 
         String msg = "";
-        String regex = "((<https:\\/\\/store.steampowered.com\\/email\\/AccountCreationEmailVerification\\?).*>)";
+        String regex = "((https://store.steampowered.com/account/newaccountverification\\?).*)";
 
         //TODO ugly
         for (Message message : messages) {

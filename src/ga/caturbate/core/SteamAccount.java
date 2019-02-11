@@ -121,4 +121,15 @@ public class SteamAccount implements Comparable<SteamAccount>{
         }
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return "SteamAccount{" +
+                "login='" + login + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", countryCode='" + countryCode + '\'' +
+                ", isCreated=" + isCreated +
+                '}';
+    }
 }

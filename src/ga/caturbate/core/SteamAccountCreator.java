@@ -7,11 +7,11 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.html.*;
 import com.gargoylesoftware.htmlunit.util.Cookie;
-import ga.caturbate.io.CookieIO;
+import ga.caturbate.core.mail.Mailer;
 
+import javax.mail.MessagingException;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -42,15 +42,15 @@ public class SteamAccountCreator {
 
             wrapper = new SteamConnectionWrapper(webClient);
 
-           /* sendRegistrationForm(webClient, new SteamAccount("rakat4aga23242ss", "asdfassdf@cock.li", "45646fddgfbbb3"));
+            SteamAccount acc = fetchNewSteamAccount(webClient);
+
+            System.out.println(acc);
+
+            sendRegistrationForm(webClient,acc);
+
             //Clear cookies when creating new accounts in loop
 
-            CookieFileWriter w = new CookieFileWriter();
-            w.writeCookiesAsText(webClient.getCookieManager());
-            w.writeCookies(webClient.getCookieManager());
-*/
-
-            CookieIO r = new CookieIO();
+           /* CookieIO r = new CookieIO();
             WebRequest request = new WebRequest(new URL(Config.STEAM_NO_GUARD_URL));
             webClient.setCookieManager(r.readCookies());
             String cook = "";
@@ -59,9 +59,9 @@ public class SteamAccountCreator {
                 cook += c.getName() +"=" + c.getValue() + ";";
             }
 
-            request.setAdditionalHeader("Cookie", cook);
+            request.setAdditionalHeader("Cookie", cook);*/
 
-            deactivateSteamGuard(webClient, request);
+            //deactivateSteamGuard(webClient, request);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,7 +69,7 @@ public class SteamAccountCreator {
     }
 
 
-    private void sendRegistrationForm(WebClient webClient, SteamAccount account) throws IOException {
+    private void sendRegistrationForm(WebClient webClient, SteamAccount account) throws IOException, MessagingException {
         HtmlPage page = webClient.getPage(Config.STEAM_LOGIN_URL);
 
         /* Fill out form*/
@@ -128,6 +128,18 @@ public class SteamAccountCreator {
         //Age check dialog
         page.executeJavaScript("StartCreationSession();"); //evtl nur ausführen, wenn captcha matcht
 
+        try {
+            Thread.sleep(20000); //Give email a chance to arrive
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Mailer m = new Mailer("192.168.0.208");
+        System.out.println("Getting verification url...");
+        String url = m.getSteamVerificationUrl(account.getEmail());
+        System.out.println(url);
+        openEmailVerificationWindow(url);
+
         //Wait for 'email verified' packet arrival
         for(int i = 0; i < 50000; i++) {
             if (wrapper.getEmailState()) {
@@ -153,18 +165,33 @@ public class SteamAccountCreator {
         page = (HtmlPage) page.getEnclosingWindow().getEnclosedPage();
 
         sendUsernameAndPassword(webClient, page, account);
-
-        //TODO read email from local server or from webmail
-        // System.out.println("Enter email verification url");
-        // openEmailVerificationWindow(webClient, s.nextLine());
     }
 
-    private void openEmailVerificationWindow(WebClient client, String url) {
-        try {
-            client.openWindow(new URL(url), "verify");
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+    private void openEmailVerificationWindow(String url) {
+
+        System.out.println("Opening " + url + "...");
+
+        Thread one = new Thread() {
+            public void run() {
+                try (final WebClient webClient = new WebClient(BrowserVersion.FIREFOX_52)) {
+                    webClient.getOptions().setThrowExceptionOnScriptError(false);
+                    webClient.getOptions().setDownloadImages(false);
+                    webClient.setAjaxController(new NicelyResynchronizingAjaxController());
+                    webClient.getCookieManager().setCookiesEnabled(true);
+                    webClient.getOptions().setRedirectEnabled(true);
+                    webClient.getCache().setMaxSize(0);
+
+                    webClient.getPage(url);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        one.start();
+
     }
 
     public void sendUsernameAndPassword(WebClient client, HtmlPage page, SteamAccount account) {
@@ -207,9 +234,7 @@ public class SteamAccountCreator {
         client.waitForBackgroundJavaScript(20000);
         page = (HtmlPage) page.getEnclosingWindow().getEnclosedPage();
     }
-
-
-    //TODO WIP
+    
     //TODO login
     private void deactivateSteamGuard(WebClient client, WebRequest request) throws IOException {
         HtmlPage page = client.getPage(request);
@@ -224,5 +249,27 @@ public class SteamAccountCreator {
         form.appendChild(btn);
 
         btn.click();
+    }
+
+    private SteamAccount fetchNewSteamAccount(WebClient client) throws IOException {
+        String login;
+        String mail;
+        String pw;
+
+        HtmlPage page = client.getPage(Config.ACCOUNT_CREATE_SERVER);
+
+        HtmlPreformattedText pre = (HtmlPreformattedText) page.getElementById("user");
+        System.out.println(pre.getTextContent());
+        String[] parts = pre.getTextContent().split(":");
+
+        if(parts.length != 3) {
+            return null;
+        }
+
+        login = parts[0];
+        pw = parts[1];
+        mail = parts[2] + "@" + Config.DEFAULT_MAIL_SERVER;
+
+        return new SteamAccount(login,mail ,pw );
     }
 }

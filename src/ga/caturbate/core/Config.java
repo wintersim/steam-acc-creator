@@ -16,6 +16,11 @@ public class Config {
     public static final String USERNAME_REGEX = "[\\w]+";
     public static final String PASSWORD_REGEX = "[\\w]+";
 
+    public static final String MAIL_PASSWD = "123456";
+
+    public static final String ACCOUNT_CREATE_SERVER = "http://192.168.0.208/create_user.php";
+    public static final String DEFAULT_MAIL_SERVER = "caturbate.ga";
+
     public static final String COOKIE_FILE = "cookies.dat";
     public static final String COOKIE_TXT_FILE = "cookies.txt";
 
