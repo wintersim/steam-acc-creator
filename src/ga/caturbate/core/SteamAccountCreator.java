@@ -17,6 +17,16 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
+/*
+ * TODO:
+ *
+ * Transform into JavaFX application
+ * Automatically solve captchas (maybe use external service)
+ * Clean up code
+ * Add support for creating multiple accounts at once (more threads)
+ */
+
 public class SteamAccountCreator {
 
 
@@ -234,7 +244,7 @@ public class SteamAccountCreator {
         client.waitForBackgroundJavaScript(20000);
         page = (HtmlPage) page.getEnclosingWindow().getEnclosedPage();
     }
-    
+
     //TODO login
     private void deactivateSteamGuard(WebClient client, WebRequest request) throws IOException {
         HtmlPage page = client.getPage(request);
