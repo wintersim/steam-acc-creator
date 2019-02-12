@@ -7,6 +7,7 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.html.*;
 import ga.caturbate.core.mail.Mailer;
+import ga.caturbate.io.AccountIO;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
@@ -31,45 +32,55 @@ public class SteamAccountCreator {
 
 
     private SteamConnectionWrapper wrapper;
+    private AccountIO accountIO;
 
     public SteamAccountCreator() {
         java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
         System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+        accountIO = new AccountIO();
     }
 
 
     //TODO: only continue if captcha matches and other errorchecks
     public void start() {
         try (final WebClient webClient = new WebClient(BrowserVersion.FIREFOX_52)) {
-            webClient.getOptions().setThrowExceptionOnScriptError(false);
-            webClient.getOptions().setDownloadImages(false);
-            webClient.setAjaxController(new NicelyResynchronizingAjaxController());
-            webClient.getCookieManager().setCookiesEnabled(true);
-            webClient.getOptions().setRedirectEnabled(true);
-            webClient.getCache().setMaxSize(0);
+            webclientDefaulSettings(webClient);
             //webClient.getOptions().setProxyConfig(new ProxyConfig("127.0.0.1", 8080));
             //webClient.getOptions().setUseInsecureSSL(true);
 
             wrapper = new SteamConnectionWrapper(webClient);
 
-            SteamAccount acc = fetchNewSteamAccount(webClient);
+            for (int i = 0; i < 5; i++) {
 
-            if(acc == null) {
-                System.out.println("Failed to fetch account from server");
-                return;
+
+                SteamAccount acc = fetchNewSteamAccount(webClient);
+
+                if (acc == null) {
+                    System.out.println("Failed to fetch account from server");
+                    return;
+                }
+
+                sendRegistrationForm(webClient, acc);
+
+                deactivateSteamGuard(webClient, new WebRequest(new URL(Config.STEAM_NO_GUARD_URL)));
+
+                accountIO.writeToAccountFile("out.txt", acc);
+
+                webClient.getCookieManager().clearCookies();
             }
-
-            sendRegistrationForm(webClient,acc);
-
-            //Clear cookies when creating new accounts in loop
-
-            deactivateSteamGuard(webClient,  new WebRequest(new URL(Config.STEAM_NO_GUARD_URL)));
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void webclientDefaulSettings(WebClient webClient) {
+        webClient.getOptions().setThrowExceptionOnScriptError(false);
+        webClient.getOptions().setDownloadImages(false);
+        webClient.setAjaxController(new NicelyResynchronizingAjaxController());
+        webClient.getCookieManager().setCookiesEnabled(true);
+        webClient.getOptions().setRedirectEnabled(true);
+        webClient.getCache().setMaxSize(0);
+    }
 
     private void sendRegistrationForm(WebClient webClient, SteamAccount account) throws IOException, MessagingException {
         HtmlPage page = webClient.getPage(Config.STEAM_LOGIN_URL);
@@ -108,7 +119,7 @@ public class SteamAccountCreator {
         CaptchaEmailState state;
 
         //Try 5 times if 'captcha matches' packet arrived
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             state = wrapper.getCaptchaState();
             if (state == CaptchaEmailState.CAPTCHA_AND_MAIL) {
                 break;
@@ -120,7 +131,7 @@ public class SteamAccountCreator {
                 e.printStackTrace();
             }
 
-            if(i == 4) {
+            if (i == 4) {
                 System.out.println("Error[" + state + "] Stopping...");
                 webClient.close();
                 System.exit(1);
@@ -133,7 +144,7 @@ public class SteamAccountCreator {
         //Give Email a Chance to arrive
         //Todo: wait in loop until arrived
         try {
-            Thread.sleep(3000);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -143,7 +154,7 @@ public class SteamAccountCreator {
         openEmailVerificationWindow(url);
 
         //Wait for 'email verified' packet arrival
-        for(int i = 0; i < 50000; i++) {
+        for (int i = 0; i < 50000; i++) {
             if (wrapper.getEmailState()) {
                 break;
             }
@@ -154,7 +165,7 @@ public class SteamAccountCreator {
                 e.printStackTrace();
             }
 
-            if(i == 49999) {
+            if (i == 49999) {
                 System.out.println("Email cannot be verified. Try another one. Exiting...");
                 webClient.close();
                 System.exit(1);
@@ -174,12 +185,7 @@ public class SteamAccountCreator {
         Thread one = new Thread() {
             public void run() {
                 try (final WebClient webClient = new WebClient(BrowserVersion.FIREFOX_52)) {
-                    webClient.getOptions().setThrowExceptionOnScriptError(false);
-                    webClient.getOptions().setDownloadImages(false);
-                    webClient.setAjaxController(new NicelyResynchronizingAjaxController());
-                    webClient.getCookieManager().setCookiesEnabled(true);
-                    webClient.getOptions().setRedirectEnabled(true);
-                    webClient.getCache().setMaxSize(0);
+                    webclientDefaulSettings(webClient);
 
                     webClient.getPage(url);
                 } catch (MalformedURLException e) {
@@ -253,7 +259,7 @@ public class SteamAccountCreator {
         HtmlPreformattedText pre = (HtmlPreformattedText) page.getElementById("user");
         String[] parts = pre.getTextContent().split(":");
 
-        if(parts.length != 3) {
+        if (parts.length != 3) {
             return null;
         }
 
@@ -261,6 +267,6 @@ public class SteamAccountCreator {
         pw = parts[1];
         mail = parts[2] + "@" + Config.DEFAULT_MAIL_SERVER;
 
-        return new SteamAccount(login,mail ,pw );
+        return new SteamAccount(login, mail, pw);
     }
 }

@@ -3,9 +3,7 @@ package ga.caturbate.io;
 import ga.caturbate.core.Config;
 import ga.caturbate.core.SteamAccount;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -33,9 +31,9 @@ public class AccountIO {
             Pattern passwd_rgx = Pattern.compile(Config.PASSWORD_REGEX);
             Matcher m;
 
-            while((currentline = br.readLine()) != null) {
+            while ((currentline = br.readLine()) != null) {
                 splitted = currentline.split(":");
-                if(splitted.length == 3) {
+                if (splitted.length == 3) {
                     m = email_rgx.matcher(splitted[0]);
                     email = m.matches() ? splitted[0] : null;
 
@@ -45,10 +43,24 @@ public class AccountIO {
                     m = passwd_rgx.matcher(splitted[2]);
                     password = m.matches() ? splitted[2] : null;
 
-                    accs.add(new SteamAccount(login,email , password));
+                    accs.add(new SteamAccount(login, email, password));
                 }
             }
         }
         return accs;
+    }
+
+    public void writeToAccountFile(String filename, Set<SteamAccount> accounts) throws IOException {
+        try (PrintWriter pw = new PrintWriter(new FileOutputStream(filename, true))) {
+            for (SteamAccount account : accounts) {
+                writeToAccountFile(filename, account);
+            }
+        }
+    }
+
+    public void writeToAccountFile(String filename, SteamAccount account) throws IOException {
+        try (PrintWriter pw = new PrintWriter(new FileOutputStream(filename, true))) {
+            pw.printf("%s;%s;%s%n", account.getEmail(), account.getLogin(), account.getPassword());
+        }
     }
 }
